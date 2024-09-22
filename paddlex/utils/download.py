@@ -1,5 +1,5 @@
 # copyright (c) 2024 PaddlePaddle Authors. All Rights Reserve.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 
 import os
 import sys
@@ -89,12 +87,18 @@ def _extract_zip_file(file_path, extd_dir):
 
 def _extract_tar_file(file_path, extd_dir):
     """ extract tar file """
-    with tarfile.open(file_path, 'r:*') as f:
-        file_list = f.getnames()
-        total_num = len(file_list)
-        for index, file in enumerate(file_list):
-            f.extract(file, extd_dir)
-            yield total_num, index
+    try:
+        with tarfile.open(file_path, 'r:*') as f:
+            file_list = f.getnames()
+            total_num = len(file_list)
+            for index, file in enumerate(file_list):
+                try:
+                    f.extract(file, extd_dir)
+                except KeyError:
+                    print(f"File {file} not found in the archive.")
+                yield total_num, index
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 def _extract(file_path, extd_dir, print_progress):
@@ -149,7 +153,7 @@ def download_and_extract(url,
                          overwrite=False,
                          no_interm_dir=True):
     """ download and extract """
-    # NOTE: `url` MUST come from a trusted source, since we do not provide a solution 
+    # NOTE: `url` MUST come from a trusted source, since we do not provide a solution
     # to secure against CVE-2007-4559.
     os.makedirs(save_dir, exist_ok=True)
     dst_path = os.path.join(save_dir, dst_name)
@@ -174,7 +178,7 @@ def download_and_extract(url,
                     raise FileNotFoundError
                 dp = os.path.join(save_dir, file_name)
                 if os.path.isdir(sp):
-                    shutil.copytree(sp, dp)
+                    shutil.copytree(sp, dp, symlinks=True)
                 else:
                     shutil.copyfile(sp, dp)
                 extd_file = dp

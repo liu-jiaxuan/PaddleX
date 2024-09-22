@@ -1,5 +1,5 @@
 # copyright (c) 2024 PaddlePaddle Authors. All Rights Reserve.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 
 import os
 
@@ -30,21 +29,8 @@ class SegPredictor(BasePredictor):
     """ SegPredictor """
     entities = MODELS
 
-    def __init__(self,
-                 model_name,
-                 model_dir,
-                 kernel_option,
-                 output,
-                 pre_transforms=None,
-                 post_transforms=None,
-                 has_prob_map=False):
-        super().__init__(
-            model_name=model_name,
-            model_dir=model_dir,
-            kernel_option=kernel_option,
-            output=output,
-            pre_transforms=pre_transforms,
-            post_transforms=post_transforms)
+    def __init__(self, has_prob_map=False, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.has_prob_map = has_prob_map
 
     def load_other_src(self):
@@ -106,7 +92,11 @@ class SegPredictor(BasePredictor):
         return pre_transforms
 
     def _get_post_transforms_from_config(self):
-        """ _get_post_transforms_from_config """
-        return [
-            T.GeneratePCMap(), T.SaveSegResults(self.output), T.PrintResult()
-        ]
+        """_get_post_transforms_from_config"""
+        post_transforms = []
+        if not self.disable_print:
+            post_transforms.append(T.PrintResult())
+        if not self.disable_save:
+            post_transforms.extend(
+                [T.GeneratePCMap(), T.SaveSegResults(self.output)])
+        return post_transforms
